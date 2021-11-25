@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_auth/Screens/MainScreen/main_screen.dart';
 import 'package:flutter_auth/Screens/MainScreen/travel_page/travel_page.dart';
 import 'package:flutter_auth/Screens/MainScreen/widgets/fab_bar.dart';
 import 'package:flutter_auth/Screens/MainScreen/widgets/overlay.dart';
@@ -12,10 +13,21 @@ class BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    MyStore store = VxState.store;
     return FABBottomAppBar(
       color: Colors.grey,
       selectedColor: Color.fromRGBO(88, 139, 118, 1),
-      onTabSelected: (selectedIndex) {},
+      onTabSelected: (selectedIndex) {
+        print(selectedIndex);
+        if (selectedIndex == 0)
+          store.pageController.animateToPage(0,
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.bounceIn);
+        else if (selectedIndex == 1)
+          store.pageController.animateToPage(1,
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.bounceIn);
+      },
       notchedShape: CircularNotchedRectangle(),
       items: [
         FABBottomAppBarItem(

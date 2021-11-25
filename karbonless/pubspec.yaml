@@ -17,6 +17,7 @@ environment:
   sdk: ">=2.1.0 <3.0.0"
 
 dependencies:
+  animated_background: ^2.0.0
   cupertino_icons: ^0.1.2
   flutter:
     sdk: flutter
