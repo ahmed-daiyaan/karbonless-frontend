@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_auth/Screens/MainScreen/food_page/food_page.dart';
 import 'package:flutter_auth/Screens/MainScreen/main_screen.dart';
 import 'package:flutter_auth/Screens/MainScreen/travel_page/travel_page.dart';
 import 'package:flutter_auth/Screens/MainScreen/widgets/fab_bar.dart';
@@ -62,7 +63,6 @@ class _FabBuilderState extends State<FabBuilder> {
   @override
   Widget build(BuildContext context) {
     MyStore store = VxState.store;
-    print("new: ${store.fabVisibility}");
     final icons = [
       Icons.train_outlined,
       Icons.food_bank_outlined,
@@ -82,11 +82,16 @@ class _FabBuilderState extends State<FabBuilder> {
                     .then((_) {
                   setState(() {});
                 });
-                MyStore store = VxState.store;
-                store.fabVisibility = false;
-                print(store.fabVisibility);
-                setState(() {});
+              } else if (value == 1) {
+                Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => FoodPage()))
+                    .then((_) {
+                  setState(() {});
+                });
               }
+              MyStore store = VxState.store;
+              store.fabVisibility = false;
+              setState(() {});
             },
           ),
         );

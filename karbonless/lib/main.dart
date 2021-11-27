@@ -7,9 +7,11 @@ import 'package:flutter_auth/store/vxstore.dart';
 import 'package:velocity_x/velocity_x.dart';
 import 'Screens/MainScreen/main_screen.dart';
 
-void main() => runApp(VxState(store: MyStore(), child: MyApp()));
+void main() => runApp(VxState(store: MyStore(), child: const MyApp()));
 
 class MyApp extends StatelessWidget {
+  const MyApp({Key key}) : super(key: key);
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
@@ -17,6 +19,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Karbonless',
       theme: ThemeData(
+        fontFamily: 'PTSans',
         primaryColor: Colors.white,
         scaffoldBackgroundColor: kPrimaryColor,
       ),
