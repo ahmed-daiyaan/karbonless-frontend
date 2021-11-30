@@ -271,6 +271,7 @@ class _DropDown1State extends State<DropDown1> {
           future: fetchModes(),
           builder: (context, snapshot) {
             return DropdownButtonFormField<String>(
+                autovalidateMode: AutovalidateMode.always,
                 decoration: InputDecoration(
                     border: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(

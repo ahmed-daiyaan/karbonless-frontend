@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_auth/Screens/MainScreen/food_page/food_page.dart';
 import 'package:flutter_auth/Screens/MainScreen/main_screen.dart';
+import 'package:flutter_auth/Screens/MainScreen/product_page/product_page.dart';
 import 'package:flutter_auth/Screens/MainScreen/travel_page/travel_page.dart';
 import 'package:flutter_auth/Screens/MainScreen/widgets/fab_bar.dart';
 import 'package:flutter_auth/Screens/MainScreen/widgets/overlay.dart';
@@ -85,6 +86,12 @@ class _FabBuilderState extends State<FabBuilder> {
               } else if (value == 1) {
                 Navigator.push(context,
                         MaterialPageRoute(builder: (context) => FoodPage()))
+                    .then((_) {
+                  setState(() {});
+                });
+              } else if (value == 2) {
+                Navigator.push(context,
+                        MaterialPageRoute(builder: (context) => ProductPage()))
                     .then((_) {
                   setState(() {});
                 });

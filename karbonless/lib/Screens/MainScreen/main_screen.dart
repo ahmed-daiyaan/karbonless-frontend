@@ -1,9 +1,11 @@
 // ignore_for_file: prefer_const_constructors
 
 // import 'package:background_location/background_location.dart';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_auth/Screens/MainScreen/user/userActivityRead.dart';
 import 'package:flutter_auth/Screens/MainScreen/user/userRead.dart';
+import 'package:flutter_auth/constants.dart';
 import 'package:flutter_auth/store/iconHierarchy.dart';
 import 'package:flutter_auth/store/logs.dart';
 import 'package:flutter_auth/store/vxstore.dart';
@@ -21,7 +23,13 @@ class MainScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     getPermission();
     return Column(
-      children: const [Greeting(), LimitSpent(), BarAndBadge(), RecentLogs()],
+      children: const [
+        Greeting(),
+        // LimitSpent(),
+        BarAndBadge(),
+        FootprintToday()
+        //  RecentLogs()
+      ],
     );
   }
 
@@ -89,14 +97,14 @@ class _GreetingState extends State<Greeting> {
                 ),
           Padding(padding: EdgeInsets.only(right: size.width / 20)),
           now.hour >= 16
-              ? Text(
+              ? AutoSizeText(
                   "Good Evening, Vaish",
                   style: TextStyle(
                       fontFamily: 'PTSans',
                       fontSize: 25,
                       color: Color.fromRGBO(208, 222, 216, 1)),
                 )
-              : Text(
+              : AutoSizeText(
                   "Good Morning, Vaish",
                   style: TextStyle(
                       fontSize: 25, color: Color.fromRGBO(208, 222, 216, 1)),
@@ -107,7 +115,7 @@ class _GreetingState extends State<Greeting> {
   }
 }
 
-Future<String> getSpent() async {
+Future<List<double>> getSpent() async {
   var response = await http.get(
     Uri.parse(
         'https://karbonless-api.herokuapp.com/activity?duration=currentDay'),
@@ -118,62 +126,71 @@ Future<String> getSpent() async {
   );
   final userActivityRead = userActivityFromJson(response.body);
   double totalSpent = 0.0;
+  double travelSpent = 0.0;
+  double foodSpent = 0.0;
+  double productSpent = 0.0;
   for (int i = 0; i < userActivityRead.length; i++) {
     totalSpent += userActivityRead[i].totalEmission;
+    if (userActivityRead[i].category == "Travel")
+      travelSpent += userActivityRead[i].totalEmission;
+    else if (userActivityRead[i].category == "Food")
+      foodSpent += userActivityRead[i].totalEmission;
+    else
+      productSpent += userActivityRead[i].totalEmission;
   }
-  return totalSpent.toStringAsFixed(1);
+  return [travelSpent, foodSpent, productSpent, totalSpent];
 }
 
-class LimitSpent extends StatefulWidget {
-  const LimitSpent({Key key}) : super(key: key);
+// class LimitSpent extends StatefulWidget {
+//   const LimitSpent({Key key}) : super(key: key);
 
-  @override
-  _LimitSpentState createState() => _LimitSpentState();
-}
+//   @override
+//   _LimitSpentState createState() => _LimitSpentState();
+// }
 
-class _LimitSpentState extends State<LimitSpent> {
-  @override
-  Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
-    return Padding(
-      padding: const EdgeInsets.all(14.0),
-      child: Container(
-        decoration: BoxDecoration(
-            color: Color.fromRGBO(88, 139, 118, 1),
-            borderRadius: BorderRadius.circular(10)),
-        padding: EdgeInsets.all(8),
-        child: Row(
-          children: [
-            Image.asset(
-              'assets/images/earth.png',
-              width: size.width / 2.5,
-              height: size.width / 2.5,
-            ),
-            Column(
-              children: [
-                Text(
-                  'Limit: 4.5 kg of CO2',
-                  style: TextStyle(fontSize: 20, color: Colors.white),
-                ),
-                Padding(padding: EdgeInsets.all(6)),
-                FutureBuilder<String>(
-                    future: getSpent(),
-                    builder: (context, snapshot) {
-                      return Text(
-                        snapshot.connectionState == ConnectionState.waiting
-                            ? '...'
-                            : 'Spent: ' + snapshot.data + ' kg of CO2',
-                        style: TextStyle(fontSize: 20, color: Colors.white),
-                      );
-                    }),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+// class _LimitSpentState extends State<LimitSpent> {
+//   @override
+//   Widget build(BuildContext context) {
+//     Size size = MediaQuery.of(context).size;
+//     return Padding(
+//       padding: const EdgeInsets.all(14.0),
+//       child: Container(
+//         decoration: BoxDecoration(
+//             color: Color.fromRGBO(88, 139, 118, 1),
+//             borderRadius: BorderRadius.circular(10)),
+//         padding: EdgeInsets.all(8),
+//         child: Row(
+//           children: [
+//             Image.asset(
+//               'assets/images/earth.png',
+//               width: size.width / 2.5,
+//               height: size.width / 2.5,
+//             ),
+//             Column(
+//               children: [
+//                 Text(
+//                   'Limit: 4.5 kg of CO2',
+//                   style: TextStyle(fontSize: 20, color: Colors.white),
+//                 ),
+//                 Padding(padding: EdgeInsets.all(6)),
+//                 FutureBuilder<String>(
+//                     future: getSpent(),
+//                     builder: (context, snapshot) {
+//                       return Text(
+//                         snapshot.connectionState == ConnectionState.waiting
+//                             ? '...'
+//                             : 'Spent: ' + snapshot.data + ' kg of CO2',
+//                         style: TextStyle(fontSize: 20, color: Colors.white),
+//                       );
+//                     }),
+//               ],
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
 
 Future<int> readKredits() async {
   MyStore store = VxState.store;
@@ -221,19 +238,20 @@ class _BarAndBadgeState extends State<BarAndBadge> {
         future: readKredits(),
         builder: (context, snapshot) {
           return Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               Padding(
-                padding: const EdgeInsets.all(14.0),
+                padding: const EdgeInsets.all(10.0),
                 child: Column(children: [
-                  Text(
+                  AutoSizeText(
                     snapshot.connectionState == ConnectionState.waiting
                         ? '...'
-                        : '${100 - snapshot.data} more points to unlock badge',
+                        : '${100 - snapshot.data} more kredits to unlock badge',
                     style: TextStyle(
-                        fontSize: 22, color: Color.fromRGBO(208, 222, 216, 1)),
+                        fontSize: 20, color: Color.fromRGBO(208, 222, 216, 1)),
                   ),
                   SizedBox(
-                    width: size.width / 1.5,
+                    width: size.width / 1.7,
                     child: Slider(
                       inactiveColor: Colors.white,
                       activeColor: Color.fromRGBO(88, 139, 118, 1),
@@ -250,13 +268,13 @@ class _BarAndBadgeState extends State<BarAndBadge> {
               Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: Container(
-                  height: size.width / 5,
-                  width: size.width / 5,
+                  height: size.width / 6,
+                  width: size.width / 6,
                   child: snapshot.connectionState == ConnectionState.waiting
                       ? Container()
                       : SizedBox(
-                          height: size.width / 5,
-                          width: size.width / 5,
+                          height: size.width / 6,
+                          width: size.width / 6,
                           child: IconHierarchy().badges[store.no_of_badges]),
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(10),
@@ -352,4 +370,205 @@ Future<List<Logs>> fetchRecentLogs() async {
   );
   final logs = logsFromJson(response.body);
   return logs;
+}
+
+class FootprintToday extends StatefulWidget {
+  const FootprintToday({Key key}) : super(key: key);
+
+  @override
+  _FootprintTodayState createState() => _FootprintTodayState();
+}
+
+class _FootprintTodayState extends State<FootprintToday> {
+  @override
+  Widget build(BuildContext context) {
+    Size size = MediaQuery.of(context).size;
+    return Column(children: [
+      Padding(padding: EdgeInsets.only(top: 30)),
+      const Center(
+          child: AutoSizeText(
+        'Your Footprint Today',
+        style: TextStyle(color: Colors.white, fontSize: 35),
+      )),
+      Padding(
+        padding: const EdgeInsets.only(top: 8.0),
+        child: Container(color: lightGreen, width: size.width - 100, height: 5),
+      ),
+      // Padding(padding: EdgeInsets.only(top: 40)),
+      FutureBuilder<List<double>>(
+          future: getSpent(),
+          builder: (context, snapshot) {
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(top: 130.0, left: 40),
+                      child: Container(
+                        decoration: BoxDecoration(
+                            shape: BoxShape.circle, color: Colors.white),
+                        // height: ,
+                        height: size.width / 3 - 30,
+                        width: size.width / 3 - 30,
+                        child: Padding(
+                          padding: const EdgeInsets.all(15.0),
+                          child: Column(
+                            children: [
+                              Center(
+                                child: Image.asset(
+                                  'assets/icons/car.png',
+                                  height: size.width / 6 - 35,
+                                  color: darkGreen,
+                                ),
+                              ),
+                              Center(
+                                  child: AutoSizeText(
+                                      snapshot.connectionState ==
+                                              ConnectionState.waiting
+                                          ? '...'
+                                          : snapshot.data[0].toStringAsFixed(1),
+                                      maxLines: 1,
+                                      style: TextStyle(
+                                          color: darkGreen, fontSize: 40)))
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                          shape: BoxShape.circle, color: Colors.white),
+                      height: size.width / 3 - 30,
+                      width: size.width / 3 - 30,
+                      child: Padding(
+                        padding: const EdgeInsets.all(15.0),
+                        child: Column(
+                          children: [
+                            Center(
+                              child: Image.asset(
+                                'assets/images/food1.png',
+                                height: size.width / 6 - 35,
+                                color: darkGreen,
+                              ),
+                            ),
+                            Center(
+                                child: AutoSizeText(
+                                    snapshot.connectionState ==
+                                            ConnectionState.waiting
+                                        ? '...'
+                                        : snapshot.data[1].toStringAsFixed(1),
+                                    style: TextStyle(
+                                        color: darkGreen, fontSize: 40)))
+                          ],
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 130.0, right: 40),
+                      child: Container(
+                        decoration: BoxDecoration(
+                            shape: BoxShape.circle, color: Colors.white),
+                        height: size.width / 3 - 30,
+                        width: size.width / 3 - 30,
+                        child: Padding(
+                          padding: const EdgeInsets.all(15.0),
+                          child: Column(
+                            children: [
+                              Center(
+                                child: Image.asset(
+                                  'assets/images/cart1.png',
+                                  height: size.width / 6 - 35,
+                                  color: darkGreen,
+                                ),
+                              ),
+                              Center(
+                                  child: AutoSizeText(
+                                      snapshot.connectionState ==
+                                              ConnectionState.waiting
+                                          ? '...'
+                                          : snapshot.data[2].toStringAsFixed(1),
+                                      style: TextStyle(
+                                          color: darkGreen, fontSize: 40)))
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    return Center(
+                      child: Container(
+                        decoration: BoxDecoration(
+                            shape: BoxShape.circle, color: Colors.white),
+                        height: size.width / 2.1,
+                        width: size.width / 2.1,
+                        child: LayoutBuilder(builder: (context, constraints) {
+                          return Stack(
+                            children: [
+                              Positioned(
+                                  top: 35,
+                                  left: 35,
+                                  child: Container(
+                                    width: size.width / 4.5,
+                                    child: AutoSizeText(
+                                        snapshot.connectionState ==
+                                                ConnectionState.waiting
+                                            ? '...'
+                                            : snapshot.data[3]
+                                                .toStringAsFixed(1),
+                                        maxLines: 1,
+                                        style: TextStyle(
+                                            color: darkGreen, fontSize: 50)),
+                                  )),
+                              Positioned(
+                                top: constraints.maxHeight / 2,
+                                left: 13,
+                                // left: constraints.maxHeight / 2,
+                                // top: constraints.maxWidth / 2,
+                                child: Transform.rotate(
+                                  angle: 15,
+                                  // quarterTurns: 2,
+                                  child: Container(
+                                    height: 3,
+                                    width: size.width / 2.1 - 30,
+                                    color: darkGreen,
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                  bottom: 35,
+                                  right: 35,
+                                  child: Text('4.5',
+                                      style: TextStyle(
+                                          color: darkGreen, fontSize: 50))),
+                            ],
+                          );
+                        }),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            );
+          }),
+      Align(
+        alignment: Alignment.centerRight,
+        child: Padding(
+          padding: const EdgeInsets.only(right: 35.0),
+          child: AutoSizeText(
+            'kg of CO2',
+            textAlign: TextAlign.right,
+            style: TextStyle(
+              fontSize: 20,
+              color: Vx.white,
+            ),
+          ),
+        ),
+      )
+    ]);
+  }
 }

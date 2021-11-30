@@ -16,6 +16,7 @@ class MyStore extends VxStore {
   final foodValues = InsertFoodValues();
   TextEditingController distanceController;
   TextEditingController quantityController;
+  String productValue;
 
   void insertTravel() async {
     travelValues.distance = int.parse(distanceController.value.text);

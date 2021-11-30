@@ -1,24 +1,54 @@
 // To parse this JSON data, do
 //
-//     final userActivity = userActivityFromJson(jsonString);
+//     final productDetails = productDetailsFromJson(jsonString);
 
 import 'dart:convert';
 
-List<UserActivity> userActivityFromJson(String str) => List<UserActivity>.from(
-    json.decode(str).map((x) => UserActivity.fromJson(x)));
+List<ProductDetails> productDetailsFromJson(String str) =>
+    List<ProductDetails>.from(
+        json.decode(str).map((x) => ProductDetails.fromJson(x)));
 
-String userActivityToJson(List<UserActivity> data) =>
+String productDetailsToJson(List<ProductDetails> data) =>
     json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
 
-class UserActivity {
-  UserActivity({
+class ProductDetails {
+  ProductDetails({
+    this.name,
+    this.score,
+  });
+
+  String name;
+  double score;
+
+  factory ProductDetails.fromJson(Map<String, dynamic> json) => ProductDetails(
+        name: json["name"],
+        score: json["score"].toDouble(),
+      );
+
+  Map<String, dynamic> toJson() => {
+        "name": name,
+        "score": score,
+      };
+}
+
+// To parse this JSON data, do
+//
+//     final productFootprint = productFootprintFromJson(jsonString);
+
+ProductFootprint productFootprintFromJson(String str) =>
+    ProductFootprint.fromJson(json.decode(str));
+
+String productFootprintToJson(ProductFootprint data) =>
+    json.encode(data.toJson());
+
+class ProductFootprint {
+  ProductFootprint({
     this.kredit,
     this.id,
     this.type,
     this.co2Emission,
-    this.mode,
     this.totalEmission,
-    this.distance,
+    this.quantity,
     this.category,
     this.owner,
     this.createdAt,
@@ -30,23 +60,22 @@ class UserActivity {
   String id;
   String type;
   double co2Emission;
-  String mode;
   double totalEmission;
-  int distance;
+  int quantity;
   String category;
   String owner;
   DateTime createdAt;
   DateTime updatedAt;
   int v;
 
-  factory UserActivity.fromJson(Map<String, dynamic> json) => UserActivity(
+  factory ProductFootprint.fromJson(Map<String, dynamic> json) =>
+      ProductFootprint(
         kredit: json["kredit"],
         id: json["_id"],
         type: json["type"],
         co2Emission: json["co2_emission"].toDouble(),
-        mode: json["mode"],
         totalEmission: json["total_emission"].toDouble(),
-        distance: json["distance"],
+        quantity: json["quantity"],
         category: json["category"],
         owner: json["owner"],
         createdAt: DateTime.parse(json["createdAt"]),
@@ -59,9 +88,8 @@ class UserActivity {
         "_id": id,
         "type": type,
         "co2_emission": co2Emission,
-        "mode": mode,
         "total_emission": totalEmission,
-        "distance": distance,
+        "quantity": quantity,
         "category": category,
         "owner": owner,
         "createdAt": createdAt.toIso8601String(),
