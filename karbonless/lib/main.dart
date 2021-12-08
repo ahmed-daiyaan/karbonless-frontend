@@ -1,43 +1,63 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_auth/Screens/Badges/badges_screen.dart';
 import 'package:flutter_auth/Screens/Login/login_screen.dart';
-import 'package:flutter_auth/Screens/MainScreen/widgets/bottom_nav_bar.dart';
+
 import 'package:flutter_auth/constants.dart';
 import 'package:flutter_auth/store/vxstore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:velocity_x/velocity_x.dart';
-import 'Screens/MainScreen/main_screen.dart';
+import 'Screens/Dashboard/dashboard.dart';
+import 'Screens/Dashboard/widgets/bottom_nav_bar.dart';
+import 'Screens/History/history.dart';
+import 'Screens/User/user_page.dart';
 
-void main() => runApp(VxState(store: MyStore(), child: const MyApp()));
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  SharedPreferences preferences = await SharedPreferences.getInstance();
+  String token = preferences.getString('karbonizeToken') ?? 'Not Found';
+  String name = preferences.getString('karbonizeName') ?? 'Not Found';
+  runApp(VxState(store: MyStore(), child: const MyApp()));
+  MyStore store = VxState.store;
+  store.currentToken = token;
+  store.currentUser = name;
+}
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({Key key}) : super(key: key);
 
-  // This widget is the root of your application.
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
+    MyStore store = VxState.store;
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Karbonless',
       theme: ThemeData(
-        fontFamily: 'PTSans',
+        fontFamily: 'Actor',
         primaryColor: Colors.white,
         scaffoldBackgroundColor: kPrimaryColor,
       ),
-      home: LoginScreen(),
+      home: store.currentToken == 'Not Found'
+          ? LoginScreen()
+          : const MainScreen(),
     );
   }
 }
 
-class MainPart extends StatefulWidget {
-  const MainPart({
+class MainScreen extends StatefulWidget {
+  const MainScreen({
     Key key,
   }) : super(key: key);
 
   @override
-  State<MainPart> createState() => _MainPartState();
+  State<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainPartState extends State<MainPart> with TickerProviderStateMixin {
+class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   MyStore store = VxState.store;
   @override
   void initState() {
@@ -54,25 +74,7 @@ class _MainPartState extends State<MainPart> with TickerProviderStateMixin {
         body: SafeArea(
             child: PageView(
           controller: store.pageController,
-          children: [MainScreen(), Badges(), Hello(), Free()],
+          children: [Dashboard(), History(), Badges(), User()],
         )));
-  }
-}
-
-class Hello extends StatelessWidget {
-  const Hello({Key key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container();
-  }
-}
-
-class Free extends StatelessWidget {
-  const Free({Key key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container();
   }
 }

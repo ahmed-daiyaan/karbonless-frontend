@@ -3,8 +3,9 @@
 // import 'package:background_location/background_location.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_auth/Screens/MainScreen/user/userActivityRead.dart';
-import 'package:flutter_auth/Screens/MainScreen/user/userRead.dart';
+import 'package:flutter_auth/Screens/Dashboard/travel_page/travel_page.dart';
+import 'package:flutter_auth/Screens/Dashboard/user/userActivityRead.dart';
+import 'package:flutter_auth/Screens/Dashboard/user/userRead.dart';
 import 'package:flutter_auth/constants.dart';
 import 'package:flutter_auth/store/iconHierarchy.dart';
 import 'package:flutter_auth/store/logs.dart';
@@ -16,12 +17,31 @@ import 'package:velocity_x/velocity_x.dart';
 import 'package:http/http.dart' as http;
 import 'package:permission_handler/permission_handler.dart';
 
-class MainScreen extends StatelessWidget {
-  const MainScreen({Key key}) : super(key: key);
+import '../../main.dart';
+import 'food_page/food_page.dart';
+
+class Dashboard extends StatelessWidget {
+  const Dashboard({Key key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    getPermission();
+    void selectNotification(String payload) async {
+      MyStore store = VxState.store;
+      store.fabVisibility = false;
+      if (payload == 'Travel') {
+        Navigator.push(
+            context, MaterialPageRoute(builder: (context) => MainScreen()));
+        Navigator.push(
+            context, MaterialPageRoute(builder: (context) => TravelPage()));
+      } else if (payload == 'Food') {
+        Navigator.push(
+            context, MaterialPageRoute(builder: (context) => MainScreen()));
+        Navigator.push(
+            context, MaterialPageRoute(builder: (context) => FoodPage()));
+      }
+    }
+
+    getPermission(selectNotification);
     return Column(
       children: const [
         Greeting(),
@@ -33,36 +53,35 @@ class MainScreen extends StatelessWidget {
     );
   }
 
-  void selectNotification(String payload) async {}
-  getPermission() async {
-    if (await Permission.location.status.isDenied) {
-      Permission.location.request();
-    }
-    LocationData locationData;
-    Location location = Location();
-    location.enableBackgroundMode(enable: true);
-    location.changeSettings(interval: 5000, distanceFilter: 10);
-    locationData = await location.getLocation();
-
-    location.onLocationChanged.listen((LocationData currentLocation) {
-      print(currentLocation.speed);
-    });
-
+  getPermission(Function selectNotification) async {
+    MyStore store = VxState.store;
     FlutterLocalNotificationsPlugin plugin = FlutterLocalNotificationsPlugin();
     const AndroidInitializationSettings androidSettings =
         AndroidInitializationSettings('app_icon');
     InitializationSettings settings =
         InitializationSettings(android: androidSettings);
     await plugin.initialize(settings, onSelectNotification: selectNotification);
-    AndroidNotificationDetails and = AndroidNotificationDetails(
-        '1', 'Karbonize',
-        largeIcon: DrawableResourceAndroidBitmap("app_icon"),
-        subText: 'Hello',
-        ongoing: true);
-    NotificationDetails platform = NotificationDetails(android: and);
-    await plugin.show(1, 'Location Change Detected',
-        'Are you moving in an vehicle? Click to add', platform,
-        payload: 'Yeah');
+    store.plugin = plugin;
+    if (await Permission.location.status.isDenied) {
+      Permission.location.request();
+    }
+    LocationData locationData;
+    Location location = Location();
+    location.enableBackgroundMode(enable: true);
+    location.changeSettings(interval: 5000, distanceFilter: 1000);
+    locationData = await location.getLocation();
+
+    location.onLocationChanged.listen((LocationData currentLocation) async {
+      AndroidNotificationDetails and = AndroidNotificationDetails(
+          '1', 'Karbonize',
+          largeIcon: DrawableResourceAndroidBitmap("app_icon"),
+          subText: 'Hello',
+          ongoing: true);
+      NotificationDetails platform = NotificationDetails(android: and);
+      await plugin.show(1, 'Location Change Detected',
+          'Are you moving in an vehicle? Click to add', platform,
+          payload: 'Travel');
+    });
   }
 }
 
@@ -76,6 +95,7 @@ class Greeting extends StatefulWidget {
 class _GreetingState extends State<Greeting> {
   @override
   Widget build(BuildContext context) {
+    MyStore store = VxState.store;
     var now = DateTime.now();
     print(now.hour);
     Size size = MediaQuery.of(context).size;
@@ -84,7 +104,7 @@ class _GreetingState extends State<Greeting> {
       padding: EdgeInsets.all(size.width / 20),
       child: Row(
         children: [
-          now.hour >= 16
+          now.hour >= 16 && now.hour <= 24
               ? Image.asset(
                   'assets/icons/moon.png',
                   width: size.width / 8,
@@ -96,16 +116,20 @@ class _GreetingState extends State<Greeting> {
                   height: size.width / 8,
                 ),
           Padding(padding: EdgeInsets.only(right: size.width / 20)),
-          now.hour >= 16
+          now.hour >= 16 && now.hour <= 24
               ? AutoSizeText(
-                  "Good Evening, Vaish",
+                  "Good Evening, ${store.currentUser}",
+                  maxLines: 1,
+                  minFontSize: 12,
                   style: TextStyle(
                       fontFamily: 'PTSans',
                       fontSize: 25,
                       color: Color.fromRGBO(208, 222, 216, 1)),
                 )
               : AutoSizeText(
-                  "Good Morning, Vaish",
+                  "Good Morning, ${store.currentUser}",
+                  maxLines: 1,
+                  minFontSize: 12,
                   style: TextStyle(
                       fontSize: 25, color: Color.fromRGBO(208, 222, 216, 1)),
                 )
@@ -116,13 +140,12 @@ class _GreetingState extends State<Greeting> {
 }
 
 Future<List<double>> getSpent() async {
+  MyStore store = VxState.store;
+
   var response = await http.get(
     Uri.parse(
         'https://karbonless-api.herokuapp.com/activity?duration=currentDay'),
-    headers: <String, String>{
-      'Authorization':
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MTkzZjg1MTBlZmQ0MTAwMTY4ZDMzZjYiLCJpYXQiOjE2MzcyMzE4NDZ9.mUr1j8NLn3tu_pszz7xSqlXAPY4JDFXREpsboYZxpm0'
-    },
+    headers: <String, String>{'Authorization': 'Bearer ${store.currentToken}'},
   );
   final userActivityRead = userActivityFromJson(response.body);
   double totalSpent = 0.0;
@@ -196,12 +219,10 @@ Future<int> readKredits() async {
   MyStore store = VxState.store;
   var response = await http.get(
     Uri.parse('https://karbonless-api.herokuapp.com/users/me'),
-    headers: <String, String>{
-      'Authorization':
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MTkzZjg1MTBlZmQ0MTAwMTY4ZDMzZjYiLCJpYXQiOjE2MzcyMzE4NDZ9.mUr1j8NLn3tu_pszz7xSqlXAPY4JDFXREpsboYZxpm0'
-    },
+    headers: <String, String>{'Authorization': 'Bearer ${store.currentToken}'},
   );
   final user = userReadFromJson(response.body);
+  store.userId = user.id;
   store.no_of_badges = user.kredit ~/ 100;
   setCount();
   print(user.kredit);
@@ -361,12 +382,11 @@ class _RecentLogsState extends State<RecentLogs> {
 }
 
 Future<List<Logs>> fetchRecentLogs() async {
+  MyStore store = VxState.store;
+
   var response = await http.get(
     Uri.parse('https://karbonless-api.herokuapp.com/activity?limit=5'),
-    headers: <String, String>{
-      'Authorization':
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MTkzZjg1MTBlZmQ0MTAwMTY4ZDMzZjYiLCJpYXQiOjE2MzcyMzE4NDZ9.mUr1j8NLn3tu_pszz7xSqlXAPY4JDFXREpsboYZxpm0'
-    },
+    headers: <String, String>{'Authorization': 'Bearer ${store.currentToken}'},
   );
   final logs = logsFromJson(response.body);
   return logs;
@@ -459,6 +479,7 @@ class _FootprintTodayState extends State<FootprintToday> {
                                             ConnectionState.waiting
                                         ? '...'
                                         : snapshot.data[1].toStringAsFixed(1),
+                                    maxLines: 1,
                                     style: TextStyle(
                                         color: darkGreen, fontSize: 40)))
                           ],
@@ -489,6 +510,7 @@ class _FootprintTodayState extends State<FootprintToday> {
                                               ConnectionState.waiting
                                           ? '...'
                                           : snapshot.data[2].toStringAsFixed(1),
+                                      maxLines: 1,
                                       style: TextStyle(
                                           color: darkGreen, fontSize: 40)))
                             ],

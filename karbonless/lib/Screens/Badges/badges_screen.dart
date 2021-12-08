@@ -45,11 +45,13 @@ class _BadgesState extends State<Badges> with TickerProviderStateMixin {
                 Padding(padding: EdgeInsets.only(top: 8)),
                 Text(
                   'You have unlocked a new badge!',
+                  textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 22, color: Colors.white),
                 ),
                 Padding(padding: EdgeInsets.only(top: 8)),
                 Text(
                   'Keep earning badges to unlock the constellation',
+                  textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.white, fontSize: 16),
                 )
               ],

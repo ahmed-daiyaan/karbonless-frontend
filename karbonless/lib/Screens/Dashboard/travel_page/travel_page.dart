@@ -1,19 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_auth/store/food_footprint.dart';
+import 'package:flutter_auth/Screens/Dashboard/travel_page/travel_details.dart';
+import 'package:flutter_auth/constants.dart';
+import 'package:flutter_auth/store/travel_footprint.dart';
+import 'package:flutter_auth/store/vxstore.dart';
 import 'package:velocity_x/velocity_x.dart';
 import 'package:http/http.dart' as http;
-import '../../../constants.dart';
-import '../../../store/vxstore.dart';
-import 'food_details.dart';
 
-class FoodPage extends StatefulWidget {
-  const FoodPage({Key key}) : super(key: key);
+class TravelPage extends StatefulWidget {
+  const TravelPage({Key key}) : super(key: key);
 
   @override
-  _FoodPageState createState() => _FoodPageState();
+  _TravelPageState createState() => _TravelPageState();
 }
 
-class _FoodPageState extends State<FoodPage> {
+class _TravelPageState extends State<TravelPage> {
+  @override
+  void initState() {
+    MyStore store = VxState.store;
+    store.fabVisibility = false;
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     MyStore store = VxState.store;
@@ -34,16 +41,16 @@ class _FoodPageState extends State<FoodPage> {
             Padding(padding: EdgeInsets.all(size.height / 35)),
             Center(
               child: Image.asset(
-                'assets/icons/food.png',
+                'assets/icons/car.png',
                 height: size.width / 4,
                 width: size.width / 3,
               ),
             ),
             Padding(padding: EdgeInsets.all(size.height / 35)),
             const Text(
-              'FOOD',
+              'TRAVEL',
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 30,
                 fontWeight: FontWeight.bold,
                 color: Colors.white,
@@ -58,14 +65,14 @@ class _FoodPageState extends State<FoodPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    'Choose Food',
+                    'Mode of Transport',
                     style: TextStyle(
                       fontSize: 24,
                       color: Colors.white,
                     ),
                   ),
                   // Padding(padding: EdgeInsets.only(right: size.width / 8)),
-                  FoodDropDown1(),
+                  DropDown1(),
                 ],
               ),
             ),
@@ -77,13 +84,31 @@ class _FoodPageState extends State<FoodPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: const [
                   Text(
-                    'Quantity',
+                    'Vehicle',
                     style: TextStyle(
                       fontSize: 24,
                       color: Colors.white,
                     ),
                   ),
-                  QuantityTextField(),
+                  DropDown2(),
+                ],
+              ),
+            ),
+            Padding(padding: EdgeInsets.all(size.width / 25)),
+            Padding(
+              padding: EdgeInsets.only(
+                  left: size.width / 20, right: size.width / 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: const [
+                  Text(
+                    'Distance (Kms)',
+                    style: TextStyle(
+                      fontSize: 24,
+                      color: Colors.white,
+                    ),
+                  ),
+                  DistanceTextField(),
                 ],
               ),
             ),
@@ -104,7 +129,7 @@ class _FoodPageState extends State<FoodPage> {
                     ))),
                 onPressed: () async {
                   setState(() {
-                    store.insertFood();
+                    store.insertTravel();
 
                     showDialog(
                         context: context,
@@ -112,8 +137,8 @@ class _FoodPageState extends State<FoodPage> {
                           return Center(
                             child: Card(
                               color: darkGreen,
-                              child: FutureBuilder<FoodFootprint>(
-                                  future: fetchEmission(store.foodValues),
+                              child: FutureBuilder<TravelFootprint>(
+                                  future: fetchEmission(store.travelValues),
                                   builder: (context, snapshot) {
                                     if (snapshot.connectionState ==
                                         ConnectionState.waiting) {
@@ -136,7 +161,7 @@ class _FoodPageState extends State<FoodPage> {
                                           padding: const EdgeInsets.all(8.0),
                                           child: Center(
                                             child: Text(
-                                              'The carbon emission for your consumption is ${snapshot.data.totalEmission} units and has been sucessfully added to your expenditure',
+                                              'The carbon emission for your recent travel is ${snapshot.data.totalEmission} units and has been sucessfully added to your expenditure',
                                               textAlign: TextAlign.center,
                                               style: const TextStyle(
                                                 fontSize: 25,
@@ -185,34 +210,135 @@ class _FoodPageState extends State<FoodPage> {
           ])))),
     );
   }
+}
 
-  Future<FoodFootprint> fetchEmission(InsertFoodValues values) async {
-    String food = values.food;
-    int quantity = values.quantity;
-    print(
-        'https://karbonless-api.herokuapp.com/footprint/food?type=$food&quantity=$quantity');
-    var response = await http.get(
-      Uri.parse(
-          'https://karbonless-api.herokuapp.com/footprint/food?type=$food&quantity=$quantity'),
-      headers: <String, String>{
-        'Authorization':
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MTkzZjg1MTBlZmQ0MTAwMTY4ZDMzZjYiLCJpYXQiOjE2MzcyMzE4NDZ9.mUr1j8NLn3tu_pszz7xSqlXAPY4JDFXREpsboYZxpm0'
-      },
+Future<List<String>> fetchModes() async {
+  MyStore store = VxState.store;
+
+  var response = await http.get(
+    Uri.parse('https://karbonless-api.herokuapp.com/footprint/travel/all'),
+    headers: <String, String>{'Authorization': 'Bearer ${store.currentToken}'},
+  );
+
+  List<String> modes = List<String>();
+  final travelDetails = travelDetailsFromJson(response.body);
+  print('Length: ${travelDetails.length}');
+  for (int i = 0; i < travelDetails.length; i++) {
+    modes.add(travelDetails[i].mode);
+  }
+  modes = modes.toSet().toList();
+  print(modes);
+  return modes;
+}
+
+Future<List<String>> fetchTypes() async {
+  MyStore store = VxState.store;
+
+  var response = await http.get(
+    Uri.parse('https://karbonless-api.herokuapp.com/footprint/travel/all'),
+    headers: <String, String>{'Authorization': 'Bearer ${store.currentToken}'},
+  );
+
+  List<String> types = List<String>();
+  final travelDetails = travelDetailsFromJson(response.body);
+  for (int i = 0; i < travelDetails.length; i++) {
+    types.add(travelDetails[i].type);
+  }
+  types = types.toSet().toList();
+  print(types);
+  return types;
+}
+
+class DropDown1 extends StatefulWidget {
+  DropDown1({
+    Key key,
+  }) : super(key: key);
+
+  @override
+  State<DropDown1> createState() => _DropDown1State();
+}
+
+class _DropDown1State extends State<DropDown1> {
+  String value;
+
+  @override
+  Widget build(BuildContext context) {
+    MyStore store = VxState.store;
+    return Container(
+      width: 150,
+      height: 60,
+      child: FutureBuilder<List<String>>(
+          future: fetchModes(),
+          builder: (context, snapshot) {
+            return DropdownButtonFormField<String>(
+                isDense: false,
+                autovalidateMode: AutovalidateMode.always,
+                decoration: InputDecoration(
+                    border: const OutlineInputBorder(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(10.0),
+                      ),
+                    ),
+                    filled: true,
+                    fillColor: lightGreen),
+                // underline: Container(),
+                style: const TextStyle(
+                  fontSize: 20,
+                  color: Colors.white,
+                ),
+                iconSize: 20,
+                iconDisabledColor: Colors.white,
+                iconEnabledColor: Colors.white,
+                dropdownColor: lightGreen,
+                value: value,
+                items: !snapshot.hasData
+                    ? <String>['...'].map((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Column(
+                            children: [
+                              Text(value),
+                              Divider(
+                                thickness: 1,
+                                color: Colors.white,
+                              )
+                            ],
+                          ),
+                        );
+                      }).toList()
+                    : snapshot.data.map((String value) {
+                        return DropdownMenuItem<String>(
+                          value: value,
+                          child: Column(
+                            children: [
+                              Text(value),
+                              Divider(
+                                thickness: 1,
+                                color: Colors.white,
+                              )
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                onChanged: (newValue) {
+                  setState(() {
+                    store.travelValues.mode = newValue;
+                    value = newValue;
+                  });
+                });
+          }),
     );
-    print(response.body);
-    final footprint = foodFootprintFromJson(response.body);
-    return footprint;
   }
 }
 
-class FoodDropDown1 extends StatefulWidget {
-  const FoodDropDown1({Key key}) : super(key: key);
+class DropDown2 extends StatefulWidget {
+  const DropDown2({Key key}) : super(key: key);
 
   @override
-  _FoodDropDown1State createState() => _FoodDropDown1State();
+  _DropDown2State createState() => _DropDown2State();
 }
 
-class _FoodDropDown1State extends State<FoodDropDown1> {
+class _DropDown2State extends State<DropDown2> {
   String value;
   @override
   Widget build(BuildContext context) {
@@ -221,9 +347,10 @@ class _FoodDropDown1State extends State<FoodDropDown1> {
         width: 150,
         height: 60,
         child: FutureBuilder<List<String>>(
-            future: fetchFood(),
+            future: fetchTypes(),
             builder: (context, snapshot) {
               return DropdownButtonFormField<String>(
+                  isDense: false,
                   isExpanded: true,
                   decoration: InputDecoration(
                       border: const OutlineInputBorder(
@@ -252,12 +379,20 @@ class _FoodDropDown1State extends State<FoodDropDown1> {
                       : snapshot.data.map((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
-                            child: Text(value),
+                            child: Column(
+                              children: [
+                                Text(value),
+                                Divider(
+                                  thickness: 1,
+                                  color: Colors.white,
+                                )
+                              ],
+                            ),
                           );
                         }).toList(),
                   onChanged: (newValue) {
                     setState(() {
-                      store.foodValues.food = newValue;
+                      store.travelValues.vehicleType = newValue;
                       value = newValue;
                     });
                   });
@@ -265,36 +400,19 @@ class _FoodDropDown1State extends State<FoodDropDown1> {
   }
 }
 
-Future<List<String>> fetchFood() async {
-  var response = await http.get(
-    Uri.parse('https://karbonless-api.herokuapp.com/footprint/food/all'),
-    headers: <String, String>{
-      'Authorization':
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2MTkzZjg1MTBlZmQ0MTAwMTY4ZDMzZjYiLCJpYXQiOjE2MzcyMzE4NDZ9.mUr1j8NLn3tu_pszz7xSqlXAPY4JDFXREpsboYZxpm0'
-    },
-  );
-
-  List<String> types = List<String>();
-  final foodDetails = foodDetailsFromJson(response.body);
-  for (int i = 0; i < foodDetails.length; i++) {
-    types.add(foodDetails[i].type);
-  }
-  return types;
-}
-
-class QuantityTextField extends StatefulWidget {
-  const QuantityTextField({Key key}) : super(key: key);
+class DistanceTextField extends StatefulWidget {
+  const DistanceTextField({Key key}) : super(key: key);
 
   @override
-  _QuantityTextFieldState createState() => _QuantityTextFieldState();
+  _DistanceTextFieldState createState() => _DistanceTextFieldState();
 }
 
-class _QuantityTextFieldState extends State<QuantityTextField> {
+class _DistanceTextFieldState extends State<DistanceTextField> {
   TextEditingController controller = TextEditingController();
   @override
   Widget build(BuildContext context) {
     MyStore store = VxState.store;
-    store.quantityController = controller;
+    store.distanceController = controller;
     return Container(
         height: 60,
         width: 150,
@@ -316,4 +434,19 @@ class _QuantityTextFieldState extends State<QuantityTextField> {
           ),
         ));
   }
+}
+
+Future<TravelFootprint> fetchEmission(InsertTravelValues values) async {
+  MyStore store = VxState.store;
+
+  String vehicleType = values.vehicleType;
+  String mode = values.mode;
+  String distance = values.distance.toString();
+  var response = await http.get(
+    Uri.parse(
+        'https://karbonless-api.herokuapp.com/footprint/travel?type=$vehicleType&mode=$mode&distance=$distance'),
+    headers: <String, String>{'Authorization': 'Bearer ${store.currentToken}'},
+  );
+  final footprint = travelFootprintFromJson(response.body);
+  return footprint;
 }
