@@ -8,6 +8,7 @@ import 'package:velocity_x/velocity_x.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:http/http.dart' as http;
+import 'package:http_parser/http_parser.dart';
 
 class User extends StatefulWidget {
   const User({Key key}) : super(key: key);
@@ -26,18 +27,19 @@ class _UserState extends State<User> {
     return Column(
       children: [
         Padding(padding: EdgeInsets.only(top: size.height / 10)),
-        FutureBuilder(
-            future: getProfileImage(),
-            builder: (context, snapshot) {
-              print(store.userId);
-              return FadeInImage(
-                  placeholder: AssetImage('assets/icons/car.png'),
-                  image: NetworkImage(
-                      'https://karbonless-api.herokuapp.com/users/${store.userId}/avatar',
-                      headers: {
-                        'Authorization': 'Bearer ${store.currentToken}'
-                      }));
-            }),
+        FadeInImage(
+          imageErrorBuilder: (context, error, stackTrace) {
+            return CircleAvatar(
+              radius: 40,
+              child: Icon(Icons.person, size: 40),
+            );
+          },
+          placeholder: AssetImage('assets/icons/user_icon.png'),
+          image: NetworkImage(
+              'https://karbonless-api.herokuapp.com/users/${store.userId}/avatar'),
+          height: size.width / 4,
+          width: size.width / 4,
+        ),
         Padding(padding: EdgeInsets.only(top: size.height / 10)),
         Padding(
           padding: const EdgeInsets.only(bottom: 8.0),
@@ -283,23 +285,20 @@ Future getProfileImage() async {
   MyStore store = VxState.store;
   print(store.currentToken);
   Map headers = {'Authorization': 'Bearer ${store.currentToken}'};
-  var response = await http.get(
-    Uri.parse(
-        'https://karbonless-api.herokuapp.com/users/6128591988247f2c60c59db7/avatar'),
-    headers: <String, String>{'Authorization': 'Bearer ${store.currentToken}'},
-  );
-  print(response.body);
-  // final footprint = travelFootprintFromJson(response.body);
-  // final ImagePicker _picker = ImagePicker();
-  // final XFile image =
-  //     await _picker.pickImage(source: ImageSource.gallery, imageQuality: 50);
+  final ImagePicker _picker = ImagePicker();
+  final XFile image = await _picker.pickImage(source: ImageSource.camera);
+  var request = http.MultipartRequest('POST',
+      Uri.parse('https://karbonless-api.herokuapp.com/users/me/avatar'));
+  request.files.add(await http.MultipartFile.fromPath('avatar', image.path,
+      contentType: MediaType('image', 'png')));
+  request.headers.addAll(headers);
 
-  // var request = http.MultipartRequest('POST',
-  //     Uri.parse('https://karbonless-api.herokuapp.com/users/me/avatar'));
-  // request.files.add(await http.MultipartFile.fromPath('avatar', image.path));
-  // request.headers.addAll(headers);
-  // var response = await request.send();
-  // print(response.statusCode);
-  // var responseBody = await response.stream.bytesToString();
-  // debugPrint(responseBody);
+  http.StreamedResponse response = await request.send();
+  print('haha');
+  print(response.statusCode);
+  if (response.statusCode == 200) {
+    print(await response.stream.bytesToString());
+  } else {
+    print(response.reasonPhrase);
+  }
 }
