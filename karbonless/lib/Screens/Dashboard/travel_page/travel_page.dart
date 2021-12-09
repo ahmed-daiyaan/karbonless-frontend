@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_auth/Screens/Dashboard/travel_page/travel_details.dart';
+import 'package:flutter_auth/Screens/History/history.dart';
 import 'package:flutter_auth/constants.dart';
 import 'package:flutter_auth/store/travel_footprint.dart';
 import 'package:flutter_auth/store/vxstore.dart';
@@ -161,7 +162,7 @@ class _TravelPageState extends State<TravelPage> {
                                           padding: const EdgeInsets.all(8.0),
                                           child: Center(
                                             child: Text(
-                                              'The carbon emission for your recent travel is ${snapshot.data.totalEmission} units and has been sucessfully added to your expenditure',
+                                              'The carbon emission for your recent travel is  ${roundDouble(snapshot.data.totalEmission, 4)} units and has been sucessfully added to your expenditure',
                                               textAlign: TextAlign.center,
                                               style: const TextStyle(
                                                 fontSize: 25,
@@ -295,29 +296,13 @@ class _DropDown1State extends State<DropDown1> {
                     ? <String>['...'].map((String value) {
                         return DropdownMenuItem<String>(
                           value: value,
-                          child: Column(
-                            children: [
-                              Text(value),
-                              Divider(
-                                thickness: 1,
-                                color: Colors.white,
-                              )
-                            ],
-                          ),
+                          child: Text(value),
                         );
                       }).toList()
                     : snapshot.data.map((String value) {
                         return DropdownMenuItem<String>(
                           value: value,
-                          child: Column(
-                            children: [
-                              Text(value),
-                              Divider(
-                                thickness: 1,
-                                color: Colors.white,
-                              )
-                            ],
-                          ),
+                          child: Text(value),
                         );
                       }).toList(),
                 onChanged: (newValue) {
@@ -379,15 +364,7 @@ class _DropDown2State extends State<DropDown2> {
                       : snapshot.data.map((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
-                            child: Column(
-                              children: [
-                                Text(value),
-                                Divider(
-                                  thickness: 1,
-                                  color: Colors.white,
-                                )
-                              ],
-                            ),
+                            child: Text(value),
                           );
                         }).toList(),
                   onChanged: (newValue) {

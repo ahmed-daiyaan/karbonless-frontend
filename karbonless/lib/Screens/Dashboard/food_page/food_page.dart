@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_auth/Screens/History/history.dart';
 import 'package:flutter_auth/store/food_footprint.dart';
 import 'package:velocity_x/velocity_x.dart';
 import 'package:http/http.dart' as http;
@@ -136,7 +137,7 @@ class _FoodPageState extends State<FoodPage> {
                                           padding: const EdgeInsets.all(8.0),
                                           child: Center(
                                             child: Text(
-                                              'The carbon emission for your consumption is ${snapshot.data.totalEmission} units and has been sucessfully added to your expenditure',
+                                              'The carbon emission for your consumption is ${roundDouble(snapshot.data.totalEmission, 4)} units and has been sucessfully added to your expenditure',
                                               textAlign: TextAlign.center,
                                               style: const TextStyle(
                                                 fontSize: 25,
@@ -253,15 +254,7 @@ class _FoodDropDown1State extends State<FoodDropDown1> {
                       : snapshot.data.map((String value) {
                           return DropdownMenuItem<String>(
                             value: value,
-                            child: Column(
-                              children: [
-                                Text(value),
-                                Divider(
-                                  thickness: 1,
-                                  color: Colors.white,
-                                )
-                              ],
-                            ),
+                            child: Text(value),
                           );
                         }).toList(),
                   onChanged: (newValue) {

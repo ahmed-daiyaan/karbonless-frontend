@@ -4,6 +4,7 @@ import 'package:flutter_auth/Screens/Login/login_screen.dart';
 import 'package:flutter_auth/constants.dart';
 import 'package:flutter_auth/store/vxstore.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:velocity_x/velocity_x.dart';
 import 'package:timezone/data/latest_all.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -110,8 +111,11 @@ class _UserState extends State<User> {
         Padding(
           padding: const EdgeInsets.only(bottom: 8.0),
           child: TextButton(
-              onPressed: () {
+              onPressed: () async {
                 store.fabVisibility = false;
+                SharedPreferences preferences =
+                    await SharedPreferences.getInstance();
+                await preferences.clear();
                 Navigator.push(context, MaterialPageRoute(builder: (context) {
                   return LoginScreen();
                 }));

@@ -127,8 +127,7 @@ class _ProductPageState extends State<ProductPage> {
                                               ConnectionState.waiting
                                           ? const CircularProgressIndicator
                                               .adaptive()
-                                          : prods.containsAll(types) &&
-                                                  snapshot.data.isNotEmpty
+                                          : snapshot.data.isNotEmpty
                                               ? Column(children: [
                                                   Padding(
                                                       padding: EdgeInsets.only(

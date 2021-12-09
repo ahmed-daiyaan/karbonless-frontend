@@ -289,7 +289,7 @@ Future<List<double>> fetchDayHistory() async {
   MyStore store = VxState.store;
   var response = await http.get(
     Uri.parse(
-        'https://karbonless-api.herokuapp.com/activity?sortBy=type:desc&duration=currentDay'),
+        'https://karbonless-api.herokuapp.com/activity?sortBy=duration:asc&duration=currentDay'),
     headers: <String, String>{'Authorization': 'Bearer ${store.currentToken}'},
   );
   final activity = readActivityFromJson(response.body);
@@ -316,7 +316,7 @@ Future<List<double>> fetchWeekHistory() async {
 
   var response = await http.get(
     Uri.parse(
-        'https://karbonless-api.herokuapp.com/activity?sortBy=type:desc&duration=currentWeek'),
+        'https://karbonless-api.herokuapp.com/activity?sortBy=duration:asc&duration=currentWeek'),
     headers: <String, String>{'Authorization': 'Bearer ${store.currentToken}'},
   );
   final activity = readActivityFromJson(response.body);
@@ -343,7 +343,7 @@ Future<List<double>> fetchMonthHistory() async {
 
   var response = await http.get(
     Uri.parse(
-        'https://karbonless-api.herokuapp.com/activity?sortBy=type:desc&duration=currentMonth'),
+        'https://karbonless-api.herokuapp.com/activity?sortBy=duration:asc&duration=currentMonth'),
     headers: <String, String>{'Authorization': 'Bearer ${store.currentToken}'},
   );
   final activity = readActivityFromJson(response.body);
@@ -375,7 +375,7 @@ Future<List<ReadActivity>> fetchHistory(String time) async {
 
   var response = await http.get(
     Uri.parse(
-        'https://karbonless-api.herokuapp.com/activity?sortBy=type:desc&duration=current$time'),
+        'https://karbonless-api.herokuapp.com/activity?sortBy=duration:asc&duration=current$time'),
     headers: <String, String>{'Authorization': 'Bearer ${store.currentToken}'},
   );
   final activity = readActivityFromJson(response.body);
